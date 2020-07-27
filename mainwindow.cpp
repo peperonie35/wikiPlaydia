@@ -59,7 +59,7 @@ void MainWindow::on_pageWeb_urlChanged(const QUrl &url)
         historique.append(url.toString());
     }
     if(url == m_settings->value("end-game-url") && ingame) {
-        stopGame("Bravo, vous avez gagner", gameTimer.elapsed());
+        stopGame("Bravo, vous avez gagner", gameTimer.elapsed()/1000);
     }
 }
 
@@ -72,32 +72,27 @@ void MainWindow::startGame() {
     gameTimer.restart();
 }
 
-void MainWindow::stopGame(QString reason, qint64 elapsedTime) {
+void MainWindow::stopGame(QString reason, double time) {
+    std::cout << time << std::endl;
     ui->startGameButton->setEnabled(true);
     ui->stopButton->setEnabled(false);
     hideUiGm(true);
     ui->pageWeb->load(QUrl(m_settings->value("base-url").toString()));
     ingame = false;
     std::stringstream ss;
-    ss << elapsedTime;
+    ss << time;
     std::string str = ss.str();
     QString str2 = QString::fromStdString(str);
-    QString str3 = "";
-    for(int i = 0; i < str2.size()-9; i++) {
-        str3+=str2[i];
-    }
-    str3 += ",";
-    for(int i = str3.size()-1; i < str2.size(); i++) {
-        str3 += str2[i];
-    }
-    new endGameDialog(reason + " temps de la partie: " + str3  + " secondes", historique, this);
+    new endGameDialog(reason + " temps de la partie: " + str2  + " secondes", historique, this);
     QStringList empty;
     historique = empty;
 }
 
 void MainWindow::finishLoading(bool) {
-    ui->pageWeb->page()->runJavaScript(jQuery);
-    removeFrom();
+    if(ingame) {
+        ui->pageWeb->page()->runJavaScript(jQuery);
+        removeFrom();
+    }
 }
 
 void MainWindow::removeFrom() {
@@ -171,5 +166,26 @@ void MainWindow::on_spinBox_valueChanged(int arg1)
 
 void MainWindow::on_stopButton_pressed()
 {
-    stopGame("vous avez abandonné", gameTimer.nsecsElapsed());
+    stopGame("vous avez abandonné", gameTimer.elapsed()/1000);
+}
+
+void MainWindow::on_specifierUrlButton_pressed()
+{
+    QString urlDep = QInputDialog::getText(this, "url", tr("url de la page de départ"));
+    if(urlDep == "") {
+        QMessageBox::critical(this, "url", tr("url invalide, vous devez spécifier une url valide pour pouvoir utiliser ce mode de jeu"));
+    } else {
+       m_settings->setValue("start-game-url", urlDep);
+    }
+    QString urlFin = QInputDialog::getText(this, "url", tr("url de la page de fin"));
+    if(urlFin == "") {
+        QMessageBox::critical(this, "url", tr("url invalide, vous devez spécifier une url valide pour pouvoir utiliser ce mode de jeu"));
+    } else {
+        m_settings->setValue("end-game-url", urlFin);
+    }
+}
+
+void MainWindow::on_copyUrlButton_pressed()
+{
+    QApplication::clipboard()->setText(ui->pageWeb->url().toString());
 }

@@ -16,6 +16,8 @@
 
 #include <QtWebEngineWidgets/QtWebEngineWidgets>
 #include <QWebEngineView>
+#include <QDebug>
+#include <QClipboard>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -29,7 +31,7 @@ public:
     MainWindow(QWidget *parent = nullptr);
     void setDefaultParam();
     void startGame();
-    void stopGame(QString reason, qint64 elapsedTime);
+    void stopGame(QString reason, double time);
     void hideUiGm(bool state);
 
     ~MainWindow();
@@ -50,6 +52,11 @@ private slots:
     void on_spinBox_valueChanged(int arg1);
 
     void on_stopButton_pressed();
+
+    void on_specifierUrlButton_pressed();
+
+    void on_copyUrlButton_pressed();
+
 public slots:
     void finishLoading(bool);
     void removeFrom();
